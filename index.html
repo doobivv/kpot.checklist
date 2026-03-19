@@ -5,176 +5,190 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="KPOT">
-<title>KPOT Manager Checklist</title>
+<meta name="apple-mobile-web-app-title" content="KPOT University">
+<title>KPOT University</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <style>
   :root {
-    --black: #0a0a0a;
-    --white: #f5f5f5;
-    --red: #d42b2b;
-    --red-dark: #a01f1f;
-    --gray: #1c1c1c;
-    --gray-mid: #2e2e2e;
-    --gray-light: #555;
-    --border: #2a2a2a;
+    --black: #141414; --surface: #1e1e1e; --surface2: #262626;
+    --white: #f0f0f0; --red: #d42b2b; --red-dark: #a01f1f;
+    --gray-mid: #333; --gray-light: #666; --border: #2f2f2f;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--black); color: var(--white); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
-
-  .screen { display: none; min-height: 100vh; }
-  .screen.active { display: flex; flex-direction: column; }
-
-  /* LOGIN */
-  #loginScreen { align-items: center; justify-content: center; background: var(--black); padding: 2rem; }
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+  #loginScreen { align-items: center; justify-content: center; padding: 2rem; }
   .login-box { width: 100%; max-width: 360px; text-align: center; }
-  .brand { font-family: 'Bebas Neue', sans-serif; font-size: 4rem; letter-spacing: 0.12em; color: var(--white); line-height: 1; }
+  .brand { font-family: 'Bebas Neue', sans-serif; font-size: 4rem; letter-spacing: 0.12em; line-height: 1; }
   .brand span { color: var(--red); }
-  .brand-sub { font-size: 0.7rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gray-light); margin-top: 0.3rem; margin-bottom: 2.5rem; }
+  .brand-university { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.35em; color: var(--gray-light); margin-top: 0.1rem; margin-bottom: 2.2rem; }
   .login-label { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray-light); margin-bottom: 1rem; display: block; }
   .pin-dots { display: flex; justify-content: center; gap: 0.8rem; margin-bottom: 1.8rem; }
-  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--gray-mid); background: transparent; transition: all 0.2s; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--gray-mid); transition: all 0.2s; }
   .pin-dot.filled { background: var(--red); border-color: var(--red); }
   .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-bottom: 1rem; }
-  .num-btn { background: var(--gray); border: 1px solid var(--border); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 1.3rem; font-weight: 500; padding: 1.1rem; border-radius: 8px; cursor: pointer; transition: background 0.15s, transform 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; }
-  .num-btn:hover { background: var(--gray-mid); }
+  .num-btn { background: var(--surface); border: 1px solid var(--border); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 1.3rem; font-weight: 500; padding: 1.1rem; border-radius: 12px; cursor: pointer; transition: background 0.15s, transform 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; }
+  .num-btn:hover { background: var(--surface2); }
   .num-btn:active { transform: scale(0.95); background: var(--red-dark); }
   .num-btn.del { font-size: 1rem; color: var(--gray-light); }
   .num-btn.empty { background: transparent; border: none; cursor: default; }
-  .error-msg { color: var(--red); font-size: 0.78rem; letter-spacing: 0.1em; height: 1.2rem; margin-top: 0.5rem; transition: opacity 0.3s; }
-
-  /* TOPBAR */
-  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.2rem 0.8rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--black); z-index: 10; }
-  .topbar-brand { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.1em; }
-  .topbar-meta { text-align: right; font-size: 0.68rem; color: var(--gray-light); letter-spacing: 0.06em; }
+  .error-msg { color: var(--red); font-size: 0.78rem; height: 1.2rem; margin-top: 0.5rem; }
+  #homeScreen { align-items: center; justify-content: center; padding: 2rem; background: var(--black); }
+  .home-box { width: 100%; max-width: 400px; }
+  .home-brand { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 0.1em; text-align: center; margin-bottom: 0.2rem; }
+  .home-brand span { color: var(--red); }
+  .home-sub { font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; letter-spacing: 0.3em; color: var(--gray-light); text-align: center; margin-bottom: 0.4rem; }
+  .home-user { font-size: 0.75rem; color: var(--gray-light); text-align: center; margin-bottom: 2.5rem; }
+  .home-user strong { color: var(--white); }
+  .home-cards { display: flex; flex-direction: column; gap: 1rem; }
+  .home-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 1.2rem; -webkit-tap-highlight-color: transparent; }
+  .home-card:hover { border-color: var(--red); background: var(--surface2); }
+  .home-card-icon { font-size: 2rem; flex-shrink: 0; }
+  .home-card-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 0.08em; }
+  .home-card-desc { font-size: 0.78rem; color: var(--gray-light); margin-top: 0.15rem; }
+  .home-card-arrow { margin-left: auto; color: var(--gray-light); font-size: 1.2rem; }
+  .home-logout { margin-top: 2rem; text-align: center; }
+  .home-logout button { background: none; border: none; color: var(--gray-light); font-family: 'DM Sans', sans-serif; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+  .home-logout button:hover { color: var(--red); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 1.4rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 10; }
+  .topbar-left { display: flex; align-items: center; gap: 0.8rem; }
+  .back-btn { background: none; border: 1px solid var(--border); color: var(--gray-light); font-size: 0.75rem; padding: 0.3rem 0.7rem; border-radius: 8px; cursor: pointer; transition: color 0.2s, border-color 0.2s; -webkit-tap-highlight-color: transparent; }
+  .back-btn:hover { color: var(--white); border-color: var(--gray-light); }
+  .topbar-brand { display: flex; flex-direction: column; line-height: 1; }
+  .topbar-brand-main { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 0.1em; }
+  .topbar-brand-main span { color: var(--red); }
+  .topbar-brand-sub { font-family: 'Bebas Neue', sans-serif; font-size: 0.6rem; letter-spacing: 0.28em; color: var(--gray-light); }
+  .topbar-meta { text-align: right; font-size: 0.68rem; color: var(--gray-light); }
   .topbar-meta strong { display: block; color: var(--white); font-size: 0.75rem; font-weight: 500; }
-  .logout-btn { background: none; border: 1px solid var(--border); color: var(--gray-light); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.3rem 0.7rem; border-radius: 4px; cursor: pointer; margin-left: 0.8rem; transition: color 0.2s, border-color 0.2s; }
-  .logout-btn:hover { color: var(--red); border-color: var(--red); }
-
-  /* TABS */
-  .tabs { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .tabs { display: flex; gap: 0.5rem; padding: 0.75rem 1.2rem; border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; background: var(--surface); }
   .tabs::-webkit-scrollbar { display: none; }
-  .tab-btn { flex-shrink: 0; background: none; border: none; border-bottom: 2px solid transparent; color: var(--gray-light); font-family: 'DM Sans', sans-serif; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.6rem 1rem 0.4rem; cursor: pointer; transition: color 0.2s, border-color 0.2s; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
-  .tab-btn.active { color: var(--white); border-bottom-color: var(--red); }
-  .tab-btn:hover { color: var(--white); }
-
-  /* TAB PROGRESS BARS */
-  .tab-progress-row { display: flex; border-bottom: 1px solid var(--border); background: var(--black); }
-  .tab-progress-cell { flex: 1; padding: 0.35rem 0.5rem 0.45rem; border-right: 1px solid var(--border); min-width: 0; }
-  .tab-progress-cell:last-child { border-right: none; }
-  .tab-prog-label { font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.25rem; display: flex; justify-content: space-between; }
-  .tab-prog-pct { color: var(--red); font-weight: 600; }
-  .tab-prog-track { height: 3px; background: var(--gray-mid); border-radius: 2px; overflow: hidden; }
-  .tab-prog-fill { height: 100%; background: var(--red); border-radius: 2px; transition: width 0.4s ease; }
-
-  /* CHECKLIST */
-  .checklist-content { padding: 1.2rem; flex: 1; overflow-y: auto; }
+  .tab-btn { flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; color: var(--gray-light); font-family: 'DM Sans', sans-serif; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.45rem 1rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; -webkit-tap-highlight-color: transparent; display: flex; align-items: center; gap: 0.35rem; }
+  .tab-btn .tab-icon { font-size: 14px; }
+  .tab-btn.active { background: var(--red); border-color: var(--red); color: var(--white); }
+  .tab-btn:hover:not(.active) { border-color: var(--gray-light); color: var(--white); }
+  .tab-progress-row { display: flex; gap: 0.5rem; padding: 0.6rem 1.2rem; border-bottom: 1px solid var(--border); background: var(--surface); overflow-x: auto; scrollbar-width: none; }
+  .tab-progress-row::-webkit-scrollbar { display: none; }
+  .tab-progress-cell { flex: 1; min-width: 55px; }
+  .tab-prog-label { font-size: 0.52rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 0.3rem; display: flex; justify-content: space-between; }
+  .tab-prog-pct { color: var(--red); font-weight: 600; flex-shrink: 0; }
+  .tab-prog-track { height: 4px; background: var(--gray-mid); border-radius: 99px; overflow: hidden; }
+  .tab-prog-fill { height: 100%; background: var(--red); border-radius: 99px; transition: width 0.4s ease; }
+  .checklist-content { padding: 1.2rem 1.4rem; flex: 1; overflow-y: auto; background: var(--black); }
   .section-header { font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gray-light); margin: 1.4rem 0 0.6rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
   .section-header:first-child { margin-top: 0; }
-  .checklist-item { display: flex; align-items: flex-start; gap: 0.9rem; padding: 0.75rem 0.4rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; border-radius: 4px; -webkit-tap-highlight-color: transparent; }
-  .checklist-item:hover { background: var(--gray); }
-  .check-box { width: 20px; height: 20px; border: 2px solid var(--gray-mid); border-radius: 4px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-  .checklist-item.done .check-box { background: var(--red); border-color: var(--red); }
+  .checklist-item { display: flex; align-items: flex-start; gap: 0.9rem; padding: 0.8rem 0.6rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; border-radius: 10px; -webkit-tap-highlight-color: transparent; }
+  .checklist-item:hover { background: var(--surface); }
+  .check-box { width: 22px; height: 22px; border: 2.5px solid var(--gray-mid); border-radius: 50%; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .checklist-item.done .check-box { background: var(--red); border-color: var(--red); transform: scale(1.1); }
   .check-box svg { display: none; }
   .checklist-item.done .check-box svg { display: block; }
-  .item-text { flex: 1; font-size: 0.88rem; font-weight: 400; line-height: 1.4; color: var(--white); transition: color 0.2s; }
+  .item-text { flex: 1; font-size: 0.88rem; line-height: 1.5; color: var(--white); transition: color 0.2s; }
   .checklist-item.done .item-text { color: var(--gray-light); text-decoration: line-through; }
   .item-comment { font-size: 0.72rem; color: var(--gray-light); margin-top: 0.2rem; }
-  .comment-btn { background: none; border: none; color: var(--gray-light); cursor: pointer; padding: 2px 4px; font-size: 0.9rem; border-radius: 4px; transition: color 0.2s; }
+  .comment-btn { background: none; border: none; color: var(--gray-light); cursor: pointer; padding: 2px 4px; font-size: 0.9rem; border-radius: 8px; transition: color 0.2s; }
   .comment-btn:hover { color: var(--red); }
-
-  /* PROGRESS SUMMARY */
-  .progress-summary { display: flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1.2rem; border-top: 1px solid var(--border); background: var(--gray); font-size: 0.75rem; color: var(--gray-light); }
+  .progress-summary { display: flex; align-items: center; gap: 0.6rem; padding: 0.85rem 1.4rem; border-top: 1px solid var(--border); background: var(--surface); font-size: 0.75rem; color: var(--gray-light); }
   .progress-count { color: var(--white); font-weight: 600; }
-
-  /* COMMENT MODAL */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: flex-end; justify-content: center; }
+  .info-content { padding: 1.2rem 1.4rem; flex: 1; overflow-y: auto; background: var(--black); }
+  .info-section { margin-bottom: 1.2rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .info-section-header { padding: 0.9rem 1.1rem; background: var(--surface2); border-bottom: 1px solid var(--border); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray-light); cursor: pointer; display: flex; justify-content: space-between; align-items: center; -webkit-tap-highlight-color: transparent; }
+  .info-section-header:hover { color: var(--white); }
+  .info-section-body { display: none; }
+  .info-section-body.open { display: block; }
+  .info-row { padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--border); }
+  .info-row:last-child { border-bottom: none; }
+  .info-row-label { font-size: 0.75rem; font-weight: 600; color: var(--white); margin-bottom: 0.25rem; }
+  .info-row-value { color: var(--gray-light); font-size: 0.82rem; line-height: 1.5; }
+  .allergen-tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 99px; padding: 0.15rem 0.55rem; font-size: 0.68rem; color: var(--gray-light); margin: 0.15rem 0.15rem 0 0; }
+  .allergen-tag.warn { border-color: #a01f1f; color: #e57373; background: rgba(160,31,31,0.15); }
+  .info-text { padding: 0.85rem 1.1rem; font-size: 0.83rem; color: var(--gray-light); line-height: 1.7; border-bottom: 1px solid var(--border); }
+  .info-text:last-child { border-bottom: none; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: flex-end; justify-content: center; }
   .modal-overlay.open { display: flex; }
-  .modal { background: var(--gray); border-radius: 16px 16px 0 0; padding: 1.5rem; width: 100%; max-width: 480px; border-top: 2px solid var(--red); }
+  .modal { background: var(--surface); border-radius: 20px 20px 0 0; padding: 1.5rem; width: 100%; max-width: 480px; border-top: 2px solid var(--red); }
   .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.08em; margin-bottom: 0.8rem; }
-  .modal textarea { width: 100%; background: var(--black); border: 1px solid var(--border); border-radius: 8px; color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 0.75rem 1rem; resize: none; height: 100px; outline: none; }
+  .modal textarea { width: 100%; background: var(--black); border: 1px solid var(--border); border-radius: 12px; color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 0.75rem 1rem; resize: none; height: 100px; outline: none; }
   .modal textarea:focus { border-color: var(--red); }
   .modal-btns { display: flex; gap: 0.6rem; margin-top: 0.8rem; }
-  .btn-save { flex: 1; background: var(--red); border: none; color: var(--white); font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.85rem; padding: 0.75rem; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
-  .btn-save:hover { background: var(--red-dark); }
-  .btn-cancel { background: var(--gray-mid); border: 1px solid var(--border); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.75rem 1.2rem; border-radius: 8px; cursor: pointer; }
-
-  /* HISTORY */
-  .history-entry { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.8rem; overflow: hidden; }
-  .history-head { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 1rem; background: var(--gray); cursor: pointer; }
-  .history-date { font-size: 0.8rem; font-weight: 600; color: var(--white); }
+  .btn-save { flex: 1; background: var(--red); border: none; color: var(--white); font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.85rem; padding: 0.75rem; border-radius: 12px; cursor: pointer; }
+  .btn-cancel { background: var(--gray-mid); border: 1px solid var(--border); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.75rem 1.2rem; border-radius: 12px; cursor: pointer; }
+  .history-entry { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 0.8rem; overflow: hidden; }
+  .history-head { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; background: var(--surface); cursor: pointer; }
+  .history-date { font-size: 0.8rem; font-weight: 600; }
   .history-meta { font-size: 0.7rem; color: var(--gray-light); margin-top: 0.1rem; }
-  .history-badge { font-size: 0.68rem; background: var(--red); color: var(--white); padding: 0.2rem 0.6rem; border-radius: 20px; font-weight: 600; }
-  .history-body { padding: 0.8rem 1rem; display: none; font-size: 0.82rem; color: var(--gray-light); line-height: 1.7; }
+  .history-badge { font-size: 0.68rem; background: var(--red); color: var(--white); padding: 0.25rem 0.7rem; border-radius: 20px; font-weight: 600; }
+  .history-body { padding: 0.8rem 1rem; display: none; font-size: 0.82rem; color: var(--gray-light); line-height: 1.7; background: var(--surface2); }
   .history-body.open { display: block; }
   .history-item-done { color: var(--white); }
-  .history-item-skip { color: var(--gray-light); text-decoration: line-through; }
-
-  nav.bottom-nav { display: flex; border-top: 1px solid var(--border); background: var(--black); position: sticky; bottom: 0; padding-bottom: env(safe-area-inset-bottom); }
-  .nav-btn { flex: 1; background: none; border: none; color: var(--gray-light); font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.8rem 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; transition: color 0.2s; -webkit-tap-highlight-color: transparent; }
+  .history-loading { color: var(--gray-light); font-size: 0.85rem; padding: 2rem; text-align: center; }
+  nav.bottom-nav { display: flex; border-top: 1px solid var(--border); background: var(--surface); position: sticky; bottom: 0; padding-bottom: env(safe-area-inset-bottom); }
+  .nav-btn { flex: 1; background: none; border: none; color: var(--gray-light); font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.85rem 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; transition: color 0.2s; -webkit-tap-highlight-color: transparent; }
   .nav-btn svg { width: 20px; height: 20px; }
   .nav-btn.active { color: var(--red); }
-  .nav-btn:hover { color: var(--white); }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen" class="screen active">
   <div class="login-box">
     <div class="brand">KP<span>O</span>T</div>
-    <div class="brand-sub">Manager Checklist System</div>
+    <div class="brand-university">University</div>
     <span class="login-label">Enter Your PIN</span>
     <div class="pin-dots">
-      <div class="pin-dot" id="d0"></div>
-      <div class="pin-dot" id="d1"></div>
-      <div class="pin-dot" id="d2"></div>
-      <div class="pin-dot" id="d3"></div>
+      <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
     </div>
     <div class="numpad">
-      <button class="num-btn" onclick="numPress('1')">1</button>
-      <button class="num-btn" onclick="numPress('2')">2</button>
-      <button class="num-btn" onclick="numPress('3')">3</button>
-      <button class="num-btn" onclick="numPress('4')">4</button>
-      <button class="num-btn" onclick="numPress('5')">5</button>
-      <button class="num-btn" onclick="numPress('6')">6</button>
-      <button class="num-btn" onclick="numPress('7')">7</button>
-      <button class="num-btn" onclick="numPress('8')">8</button>
-      <button class="num-btn" onclick="numPress('9')">9</button>
-      <button class="num-btn empty"></button>
-      <button class="num-btn" onclick="numPress('0')">0</button>
-      <button class="num-btn del" onclick="numDel()">⌫</button>
+      <button class="num-btn" onclick="numPress('1')">1</button><button class="num-btn" onclick="numPress('2')">2</button><button class="num-btn" onclick="numPress('3')">3</button>
+      <button class="num-btn" onclick="numPress('4')">4</button><button class="num-btn" onclick="numPress('5')">5</button><button class="num-btn" onclick="numPress('6')">6</button>
+      <button class="num-btn" onclick="numPress('7')">7</button><button class="num-btn" onclick="numPress('8')">8</button><button class="num-btn" onclick="numPress('9')">9</button>
+      <button class="num-btn empty"></button><button class="num-btn" onclick="numPress('0')">0</button><button class="num-btn del" onclick="numDel()">⌫</button>
     </div>
     <div class="error-msg" id="errorMsg"></div>
   </div>
 </div>
 
-<!-- APP -->
-<div id="appScreen" class="screen">
-  <div class="topbar">
-    <div class="topbar-brand">KP<span style="color:var(--red)">O</span>T</div>
-    <div style="display:flex;align-items:center;gap:0.4rem">
-      <div class="topbar-meta">
-        <strong id="userLabel">Manager</strong>
-        <span id="dateLabel"></span>
+<div id="homeScreen" class="screen">
+  <div class="home-box">
+    <div class="home-brand">KP<span>O</span>T</div>
+    <div class="home-sub">University</div>
+    <div class="home-user">Welcome back, <strong id="homeUser"></strong></div>
+    <div class="home-cards">
+      <div class="home-card" onclick="showDaily()">
+        <div class="home-card-icon">📋</div>
+        <div><div class="home-card-title">Daily Checklists</div><div class="home-card-desc">Opening, Mid Shift, Closing & Food Safety</div></div>
+        <div class="home-card-arrow">›</div>
       </div>
-      <button class="logout-btn" onclick="logout()">Out</button>
+      <div class="home-card" onclick="showInfo()">
+        <div class="home-card-icon">📚</div>
+        <div><div class="home-card-title">Information</div><div class="home-card-desc">NC Health Guidelines, Allergens & Policies</div></div>
+        <div class="home-card-arrow">›</div>
+      </div>
     </div>
+    <div class="home-logout"><button onclick="logout()">Sign Out</button></div>
   </div>
+</div>
 
+<div id="dailyScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" onclick="goHome()">← Home</button>
+      <div class="topbar-brand"><div class="topbar-brand-main">KP<span>O</span>T</div><div class="topbar-brand-sub">University</div></div>
+    </div>
+    <div class="topbar-meta"><strong id="userLabel"></strong><span id="dateLabel"></span></div>
+  </div>
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(0)">Opening</button>
-    <button class="tab-btn" onclick="switchTab(1)">Closing</button>
-    <button class="tab-btn" onclick="switchTab(2)">Food Safety</button>
-    <button class="tab-btn" onclick="switchTab(3)">Shift Handover</button>
+    <button class="tab-btn active" onclick="switchTab(0)"><span class="tab-icon">🌅</span>Opening</button>
+    <button class="tab-btn" onclick="switchTab(1)"><span class="tab-icon">☀️</span>Mid Shift</button>
+    <button class="tab-btn" onclick="switchTab(2)"><span class="tab-icon">🌙</span>Closing</button>
+    <button class="tab-btn" onclick="switchTab(3)"><span class="tab-icon">🌡️</span>Food Safety</button>
   </div>
-
   <div class="tab-progress-row" id="tabProgressRow"></div>
-
   <div class="checklist-content" id="checklistContent"></div>
   <div class="progress-summary" id="progressSummary"></div>
-
   <nav class="bottom-nav">
     <button class="nav-btn active" id="navChecklist" onclick="showChecklist()">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
@@ -187,9 +201,24 @@
   </nav>
 </div>
 
-<div id="historyPane" style="display:none; flex:1; overflow-y:auto; padding:1.2rem;"></div>
+<div id="infoScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" onclick="goHome()">← Home</button>
+      <div class="topbar-brand"><div class="topbar-brand-main">KP<span>O</span>T</div><div class="topbar-brand-sub">University</div></div>
+    </div>
+    <div class="topbar-meta"><strong id="infoUserLabel"></strong></div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchInfoTab(0)"><span class="tab-icon">🏥</span>NC Health</button>
+    <button class="tab-btn" onclick="switchInfoTab(1)"><span class="tab-icon">⚠️</span>Allergens</button>
+    <button class="tab-btn" onclick="switchInfoTab(2)"><span class="tab-icon">📄</span>Policies</button>
+  </div>
+  <div class="info-content" id="infoContent"></div>
+</div>
 
-<!-- COMMENT MODAL -->
+<div id="historyPane" style="display:none; flex:1; overflow-y:auto; padding:1.2rem 1.4rem; background:var(--black);"></div>
+
 <div class="modal-overlay" id="commentModal">
   <div class="modal">
     <div class="modal-title">Add Note</div>
@@ -202,247 +231,233 @@
 </div>
 
 <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBY2HT-vSOzwbS9vsi9DmDa_MhC7Y4o454",
+  authDomain: "kpot-checklist.firebaseapp.com",
+  projectId: "kpot-checklist",
+  storageBucket: "kpot-checklist.firebasestorage.app",
+  messagingSenderId: "613295954691",
+  appId: "1:613295954691:web:0da73b679c122af099a736",
+  measurementId: "G-TB651KVZJF"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 const USERS = { '1234': 'Manager', '5678': 'Staff', '0000': 'Admin' };
 
 const LISTS = {
-  0: {
-    name: 'Opening',
-    sections: {
-      'Front of House': ['Unlock main entrance & check exterior','Turn on dining room lights & music','Set up host stand & menus','Inspect all tables — clean, set, ready','Confirm reservation list for the day'],
-      'Kitchen': ['Verify all equipment is operational','Check refrigerator & freezer temperatures','Confirm prep inventory is stocked','Inspect walk-in cooler for proper storage','Ensure hand-washing stations are supplied'],
-      'Staff': ['Confirm all staff have clocked in','Conduct pre-shift meeting','Assign station assignments','Review daily specials with team'],
-    }
-  },
-  1: {
-    name: 'Closing',
-    sections: {
-      'Front of House': ['Clear & sanitize all tables','Sweep and mop dining room floor','Restock condiments & napkins for next day','Secure cash register & count drawer','Turn off lights, music, and displays'],
-      'Kitchen': ['Deep clean all cooking surfaces','Store all food properly — labeled & dated','Empty and clean all fryers/grills','Check dumpster area is secure','Turn off all equipment & verify'],
-      'Closing Duties': ['Complete closing sales report','Lock all entry points','Activate alarm system','Submit end-of-day notes to GM'],
-    }
-  },
-  2: {
-    name: 'Food Safety',
-    sections: {
-      'Temperature Checks': ['Walk-in cooler (target: 34–38°F)','Freezer (target: 0°F or below)','Hot holding units (target: 140°F+)','Cold buffet station (target: 40°F or below)'],
-      'Hygiene': ['All staff wearing gloves when handling food','Handwashing log signed by all staff','No bare-hand contact with ready-to-eat foods','Hair nets/restraints in use in kitchen'],
-      'Food Storage': ['FIFO rotation verified — older product in front','No expired product on shelves','Raw meats stored below cooked/ready foods','All containers sealed and labeled'],
-    }
-  },
-  3: {
-    name: 'Shift Handover',
-    sections: {
-      'Outgoing Manager': ['Complete sales summary for shift','Note any maintenance issues observed','Log any staff incidents or concerns','Count and verify cash drawer','Brief incoming manager on priority items'],
-      'Incoming Manager': ['Review outgoing manager notes','Confirm staffing for remainder of shift','Walk the floor — assess readiness','Check kitchen inventory levels','Review any reservations or events'],
-    }
-  }
+  0: { name: 'Opening', sections: { 'Opening Duties': [
+    'Develop and distribute the floorplan seating chart for all servers',
+    'Assign and communicate sidework responsibilities for FOH staff',
+    'Review shift history and any outstanding notes from the previous day',
+    'Coordinate and schedule break times for all double-shift employees',
+    'Document and manage logs for call-outs and late clock-ins',
+    'Confirm that the open sign and exterior lighting are active',
+  ]}},
+  1: { name: 'Mid Shift', sections: { 'Mid Shift Duties': [
+    'Perform table touches to assess guest satisfaction and address concerns proactively',
+    'Develop and distribute the seating chart for all PM servers',
+    'Conduct a thorough review of all outstanding guest checks',
+    'Assign and communicate sidework responsibilities for the incoming night shift FOH staff',
+    'Ensure all FOH double-shift employees are released for breaks in a timely and organized manner',
+  ]}},
+  2: { name: 'Closing', sections: { 'Closing Duties': [
+    'Ensure the open sign and exterior lighting have been deactivated',
+    'Verify that all assigned sidework has been completed by FOH staff',
+    'Collect all walkie-talkies and toast devices from servers prior to checkout',
+    'Collect all money owed from FOH staff and reconcile accordingly',
+    'Secure the front entrance at the appropriate time to begin end-of-day cash count',
+    'Run the sales summary and complete the cash-out report',
+    'Submit all required reports to Jon or Katrina in a timely manner',
+    'Place cash and the daily report in the safe for secure storage',
+    'Confirm all entry points and exits are properly secured',
+    'Ensure all lighting throughout the restaurant has been turned off',
+  ]}},
+  3: { name: 'Food Safety', sections: {
+    'Raw Meat Handling': [
+      'All raw proteins are stored separately from ready-to-eat foods and produce',
+      'Raw meats are stored in sealed, leak-proof containers at or below 41°F',
+      'Raw proteins are labeled with item name, date received, and use-by date',
+      'FIFO rotation is verified — oldest product is pulled and used first',
+      'No cross-contamination risk between raw beef, pork, and seafood storage areas',
+    ],
+    'Temperature & Equipment': [
+      'All tabletop grills are cleaned and functioning prior to service',
+      'Walk-in cooler temperature is logged and within range (34–41°F)',
+      'Freezer temperature is logged and within range (0°F or below)',
+      'All raw protein holding temps are verified and documented before service',
+      'Verify that soup and vegetable timers are set and actively monitored throughout service',
+    ],
+    'Sanitation & Compliance': [
+      'All food contact surfaces and grills are sanitized between uses',
+      'Staff handling raw proteins are wearing gloves and following proper hygiene protocols',
+      'All sauces, marinades, and condiments are labeled with prep date and contents',
+      'No bare-hand contact with any ready-to-eat food items',
+      'Ensure all prep areas are clear of personal employee belongings prior to service',
+      'Health inspection log is up to date and accessible on premises',
+    ],
+  }},
 };
 
-let currentUser = null, pinBuffer = '', currentTab = 0;
-let state = {}, history = [], commentTarget = null, showingHistory = false;
+const INFO = {
+  0: { name: 'NC Health', sections: [
+    { title: 'Grading & Inspection Overview', items: [
+      { label: 'Inspection Frequency', value: 'NC restaurants are inspected 1–4 times per year based on risk level. High-risk establishments (like Korean BBQ with raw proteins) are typically inspected more frequently.' },
+      { label: 'Grading Scale', value: 'Inspections are scored on a 100-point scale. A = 90–100, B = 80–89, C = 70–79. Any score below 70 results in immediate permit revocation.' },
+      { label: 'Grade Card Posting', value: 'The sanitation grade card must be posted in a location clearly visible to the public at all times. Failure to display is a violation.' },
+      { label: 'Permit Requirement', value: 'A valid food service permit issued by the local county health department is required to operate. Permits must be renewed annually.' },
+    ]},
+    { title: 'Food Safety Requirements', items: [
+      { label: 'Approved Food Sources', value: 'All food must come from an approved, inspected source. No home-prepared or uninspected products may be served.' },
+      { label: 'Temperature Control', value: 'Cold foods must be held at 41°F or below. Hot foods must be held at 135°F or above. Raw proteins must never exceed 41°F during storage.' },
+      { label: 'Raw Protein Handling', value: 'Raw meats must be stored below ready-to-eat foods. Separate containers required for beef, pork, and seafood to prevent cross-contamination.' },
+      { label: 'Date Labeling', value: 'All prepared and opened food items must be labeled with prep date and use-by date. FIFO rotation must be followed at all times.' },
+      { label: 'Employee Health', value: 'Staff with symptoms of illness must not handle food. Managers are required to enforce this policy at all times.' },
+    ]},
+    { title: 'Sanitation Standards', items: [
+      { label: 'Handwashing', value: 'Handwashing stations must be stocked with soap and paper towels at all times. Staff must wash hands after handling raw proteins, using the restroom, and before food contact.' },
+      { label: 'Surface Sanitization', value: 'All food-contact surfaces including tabletop grills must be cleaned and sanitized between uses. Sanitizer concentration must be verified and documented.' },
+      { label: 'Pest Control', value: 'The establishment must be free of pests. A licensed pest control program is required. Evidence of pests during inspection results in significant point deductions.' },
+      { label: 'Facility Maintenance', value: 'Restrooms must be clean, properly stocked, and in good repair at all times. Floors, walls, and ceilings must be maintained and free of damage.' },
+    ]},
+  ]},
+  1: { name: 'Allergens', sections: [
+    { title: '⚠️ Important Allergen Notice', text: 'KPOT is NOT a dedicated allergen-free facility. Cross-contamination is possible at the sauce bar and shared grill surfaces. Always inform guests with severe allergies and direct them to speak with a manager.' },
+    { title: 'BBQ Proteins', allergens: [
+      { item: 'Beef Brisket', tags: ['Soy (marinade)'], warn: [] },
+      { item: 'Short Ribs (Galbi)', tags: ['Soy', 'Sesame', 'Garlic'], warn: ['Sesame'] },
+      { item: 'Beef Bulgogi', tags: ['Soy', 'Sesame', 'Garlic', 'Pear'], warn: ['Sesame'] },
+      { item: 'Pork Belly', tags: ['None typical'], warn: [] },
+      { item: 'Spicy Pork', tags: ['Soy', 'Sesame', 'Chili'], warn: ['Sesame'] },
+      { item: 'Chicken Bulgogi', tags: ['Soy', 'Sesame', 'Garlic'], warn: ['Sesame'] },
+      { item: 'Cumin Lamb', tags: ['Cumin', 'Chili'], warn: [] },
+      { item: 'Shrimp', tags: ['Shellfish'], warn: ['Shellfish'] },
+      { item: 'Snow Crab', tags: ['Shellfish'], warn: ['Shellfish'] },
+      { item: 'Squid', tags: ['Shellfish / Mollusks'], warn: ['Shellfish'] },
+    ]},
+    { title: 'Hot Pot Broths', allergens: [
+      { item: 'Thai Tom Yum', tags: ['Shellfish', 'Lemongrass', 'Chili', 'Fish sauce'], warn: ['Shellfish', 'Fish'] },
+      { item: 'Szechuan Spicy', tags: ['Soy', 'Sesame', 'Chili', 'Numbing spice'], warn: ['Sesame'] },
+      { item: 'Healthy Herbs', tags: ['Soy'], warn: [] },
+      { item: 'Korean Seafood', tags: ['Shellfish', 'Fish sauce', 'Soy'], warn: ['Shellfish', 'Fish'] },
+      { item: 'Japanese Miso', tags: ['Soy', 'Gluten'], warn: ['Gluten'] },
+      { item: 'Gluten Free Soup', tags: ['Gluten-free'], warn: [] },
+    ]},
+    { title: 'Sauces', allergens: [
+      { item: 'Sesame Sauce', tags: ['Sesame'], warn: ['Sesame'] },
+      { item: 'Sesame Oil', tags: ['Sesame'], warn: ['Sesame'] },
+      { item: 'Soybean Paste', tags: ['Soy', 'Gluten'], warn: ['Gluten'] },
+      { item: 'Peanut Sauce', tags: ['Peanuts', 'Soy'], warn: ['Peanuts'] },
+      { item: 'Sweet Spicy Sauce', tags: ['Soy', 'Chili'], warn: [] },
+      { item: 'KPOT Sauce', tags: ['Soy', 'Sesame', 'Garlic'], warn: ['Sesame'] },
+      { item: 'Oyster Sauce', tags: ['Shellfish', 'Soy', 'Gluten'], warn: ['Shellfish', 'Gluten'] },
+      { item: 'Hoisin Sauce', tags: ['Soy', 'Gluten', 'Sesame'], warn: ['Gluten', 'Sesame'] },
+      { item: 'Ssamjang', tags: ['Soy', 'Sesame', 'Chili'], warn: ['Sesame'] },
+      { item: 'BBQ Hot Sauce', tags: ['Soy', 'Chili'], warn: [] },
+      { item: 'Chili Garlic Sauce', tags: ['Chili', 'Garlic'], warn: [] },
+      { item: 'Shacha Sauce', tags: ['Shellfish', 'Soy', 'Sesame'], warn: ['Shellfish', 'Sesame'] },
+      { item: 'Hot Oil', tags: ['Chili', 'Sesame'], warn: ['Sesame'] },
+      { item: 'Soy Sauce', tags: ['Soy', 'Gluten'], warn: ['Gluten'] },
+      { item: 'Steak Sauce', tags: ['Soy', 'Gluten'], warn: ['Gluten'] },
+      { item: 'Ponzu Sauce', tags: ['Soy', 'Citrus', 'Fish'], warn: ['Fish'] },
+    ]},
+    { title: 'Kimchi', allergens: [
+      { item: 'Kimchi', tags: ['Fish sauce', 'Chili'], warn: ['Fish'] },
+      { item: 'Cucumber Kimchi', tags: ['Fish sauce', 'Chili'], warn: ['Fish'] },
+      { item: 'Radish Kimchi', tags: ['Fish sauce', 'Chili'], warn: ['Fish'] },
+    ]},
+    { title: 'Common Allergen Key', text: 'The Big 9 allergens to always communicate to guests: Milk, Eggs, Fish, Shellfish, Tree Nuts, Peanuts, Wheat (Gluten), Soybeans, Sesame. Most KPOT marinades contain soy and sesame. Always direct guests with peanut or tree nut allergies to review all sauces carefully as cross-contamination at the sauce bar is a significant risk.' },
+  ]},
+  2: { name: 'Policies', sections: [
+    { title: 'General Conduct', items: [
+      { label: 'Punctuality', value: 'All staff are expected to arrive on time and ready to work. Late arrivals must be documented by the manager on duty in the shift log.' },
+      { label: 'Dress Code', value: 'All FOH staff must wear the approved KPOT uniform. Uniforms must be clean and presentable at all times during service.' },
+      { label: 'Personal Items', value: 'Personal belongings including phones, bags, and food/drink items are not permitted in prep or service areas. All personal items must be stored in designated areas only.' },
+      { label: 'Phone Use', value: 'Personal phone use is prohibited on the floor during service. Phones may only be used during designated break periods in non-service areas.' },
+    ]},
+    { title: 'Call-Out & Attendance', items: [
+      { label: 'Call-Out Procedure', value: 'Staff must notify the manager on duty at least 2 hours before their scheduled shift via phone call — text messages alone are not accepted.' },
+      { label: 'No Call No Show', value: 'A no call, no show is considered a serious attendance violation and may result in disciplinary action up to and including termination.' },
+      { label: 'Late Clock-Ins', value: 'All late clock-ins must be logged by the manager on duty with the reason documented. Repeated tardiness will result in disciplinary review.' },
+    ]},
+    { title: 'Cash Handling', items: [
+      { label: 'Server Checkout', value: 'All servers must complete their cash checkout with the manager on duty before clocking out. Discrepancies must be resolved and documented before the server is released.' },
+      { label: 'Cash Deposits', value: 'All cash collected must be placed in the safe by the closing manager along with the daily cash-out report. No cash is to be left unsecured.' },
+      { label: 'Reporting', value: 'End-of-day sales summaries and cash-out reports must be submitted to Jon or Katrina upon completion of the closing shift.' },
+    ]},
+    { title: 'Guest Experience', items: [
+      { label: 'Table Touches', value: 'Managers are expected to maintain a continuous presence on the floor by performing ongoing table touches throughout the duration of the shift to ensure consistent guest satisfaction and timely resolution of any concerns.' },
+      { label: 'Complaint Resolution', value: 'All guest complaints must be addressed promptly and professionally by the manager on duty. Any comps or discounts require manager approval and must be documented.' },
+      { label: 'Allergen Inquiries', value: 'Any guest with a food allergy must be directed to a manager immediately. Staff are not permitted to make allergen guarantees — always escalate to management.' },
+    ]},
+  ]},
+};
 
-function loadState() {
-  try {
-    const s = localStorage.getItem('kpot_state');
-    const h = localStorage.getItem('kpot_history');
-    if (s) state = JSON.parse(s);
-    if (h) history = JSON.parse(h);
-  } catch(e) {}
+let currentUser=null, pinBuffer='', currentTab=0, currentInfoTab=0;
+let state={}, commentTarget=null, showingHistory=false;
+
+function getESTTimestamp() {
+  return new Date().toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' EST';
 }
-
-function saveState() {
-  try {
-    localStorage.setItem('kpot_state', JSON.stringify(state));
-    localStorage.setItem('kpot_history', JSON.stringify(history));
-  } catch(e) {}
+function getESTDate() {
+  return new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric' });
 }
-
-function getKey(tab, section, idx) { return tab + '__' + section + '__' + idx; }
-
-function getTabStats(tabIdx) {
-  const list = LISTS[tabIdx];
-  const tabState = state[tabIdx] || {};
-  let total = 0, done = 0;
-  for (const [section, items] of Object.entries(list.sections)) {
-    items.forEach((_, idx) => {
-      total++;
-      if (tabState[getKey(tabIdx, section, idx)]?.done) done++;
+function loadLocalState() { try { const s=localStorage.getItem('kpot_s'); if(s) state=JSON.parse(s); } catch(e){} }
+function saveLocalState() { try { localStorage.setItem('kpot_s', JSON.stringify(state)); } catch(e){} }
+function getKey(t,s,i) { return t+'__'+s+'__'+i; }
+function getTabStats(ti) { const l=LISTS[ti]; const ts=state[ti]||{}; let tot=0,dn=0; for(const[s,items]of Object.entries(l.sections)) items.forEach((_,i)=>{ tot++; if(ts[getKey(ti,s,i)]?.done) dn++; }); return {total:tot,done:dn,pct:tot>0?Math.round((dn/tot)*100):0}; }
+function renderTabProgressRow() { const row=document.getElementById('tabProgressRow'); row.innerHTML=''; Object.keys(LISTS).forEach(i=>{ const{pct}=getTabStats(parseInt(i)); const cell=document.createElement('div'); cell.className='tab-progress-cell'; cell.innerHTML='<div class="tab-prog-label"><span>'+LISTS[i].name+'</span><span class="tab-prog-pct">'+pct+'%</span></div><div class="tab-prog-track"><div class="tab-prog-fill" style="width:'+pct+'%"></div></div>'; row.appendChild(cell); }); }
+function numPress(n) { if(pinBuffer.length>=4)return; pinBuffer+=n; updateDots(); if(pinBuffer.length===4)setTimeout(tryLogin,150); }
+function numDel() { pinBuffer=pinBuffer.slice(0,-1); updateDots(); document.getElementById('errorMsg').textContent=''; }
+function updateDots() { for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length); }
+function tryLogin() { if(USERS[pinBuffer]){currentUser=USERS[pinBuffer];showHomeScreen();}else{document.getElementById('errorMsg').textContent='Incorrect PIN. Try again.';pinBuffer='';updateDots();} }
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.getElementById('historyPane').style.display='none'; }
+function showHomeScreen() { loadLocalState(); document.getElementById('homeUser').textContent=currentUser; showScreen('homeScreen'); }
+function showDaily() { showScreen('dailyScreen'); document.getElementById('userLabel').textContent=currentUser; document.getElementById('dateLabel').textContent=getESTDate(); showingHistory=false; document.getElementById('navChecklist').classList.add('active'); document.getElementById('navHistory').classList.remove('active'); document.getElementById('checklistContent').style.display=''; document.getElementById('progressSummary').style.display=''; document.getElementById('tabProgressRow').style.display=''; renderTabProgressRow(); renderChecklist(); }
+function showInfo() { showScreen('infoScreen'); document.getElementById('infoUserLabel').textContent=currentUser; currentInfoTab=0; document.querySelectorAll('#infoScreen .tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0)); renderInfoTab(); }
+function goHome() { showScreen('homeScreen'); }
+function logout() { saveShiftToFirebase(); }
+async function saveShiftToFirebase() {
+  const totalDone=countAllDone();
+  if(totalDone===0){doLogout();return;}
+  try { await db.collection('sessions').add({ date:getESTTimestamp(), user:currentUser, tabs:JSON.parse(JSON.stringify(state)), totalDone:totalDone, timestamp:firebase.firestore.FieldValue.serverTimestamp() }); } catch(e){ console.error('Firebase save error:',e); }
+  state={}; saveLocalState(); doLogout();
+}
+function doLogout() { currentUser=null; pinBuffer=''; updateDots(); document.getElementById('errorMsg').textContent=''; showScreen('loginScreen'); }
+function countAllDone() { let n=0; for(const t in state) for(const k in state[t]) if(state[t][k].done) n++; return n; }
+function switchTab(idx) { currentTab=idx; document.querySelectorAll('#dailyScreen .tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx)); if(!showingHistory) renderChecklist(); }
+function switchInfoTab(idx) { currentInfoTab=idx; document.querySelectorAll('#infoScreen .tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx)); renderInfoTab(); }
+function showChecklist() { showingHistory=false; document.getElementById('navChecklist').classList.add('active'); document.getElementById('navHistory').classList.remove('active'); document.getElementById('checklistContent').style.display=''; document.getElementById('progressSummary').style.display=''; document.getElementById('tabProgressRow').style.display=''; document.getElementById('historyPane').style.display='none'; renderChecklist(); }
+function showHistory() { showingHistory=true; document.getElementById('navHistory').classList.add('active'); document.getElementById('navChecklist').classList.remove('active'); document.getElementById('checklistContent').style.display='none'; document.getElementById('progressSummary').style.display='none'; document.getElementById('tabProgressRow').style.display='none'; const pane=document.getElementById('historyPane'); pane.style.display='block'; pane.innerHTML='<div class="history-loading">Loading sessions...</div>'; loadHistoryFromFirebase(pane); }
+async function loadHistoryFromFirebase(pane) {
+  try {
+    const snapshot=await db.collection('sessions').orderBy('timestamp','desc').limit(50).get();
+    if(snapshot.empty){pane.innerHTML='<div class="history-loading">No saved sessions yet.</div>';return;}
+    pane.innerHTML='<div style="font-size:0.62rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gray-light);margin-bottom:1rem;">Recent Sessions</div>';
+    snapshot.forEach((doc)=>{
+      const entry=doc.data(); const div=document.createElement('div'); div.className='history-entry';
+      let lines='';
+      for(const tab in entry.tabs){ lines+='<div style="color:var(--red);font-size:0.7rem;text-transform:uppercase;margin-top:0.6rem;margin-bottom:0.2rem">'+(LISTS[tab]?.name||tab)+'</div>'; for(const[sec,items]of Object.entries(LISTS[tab]?.sections||{})) items.forEach((item,idx)=>{ const s=entry.tabs[tab][getKey(tab,sec,idx)]; if(s) lines+='<div class="'+(s.done?'history-item-done':'')+'">'+(s.done?'✓':'○')+' '+item+(s.comment?' <em style="font-size:0.72rem;color:#888">— '+s.comment+'</em>':'')+'</div>'; }); }
+      const id='hb_'+doc.id;
+      div.innerHTML='<div class="history-head" onclick="document.getElementById(\''+id+'\').classList.toggle(\'open\')"><div><div class="history-date">'+entry.date+'</div><div class="history-meta">by '+entry.user+'</div></div><span class="history-badge">'+entry.totalDone+' done</span></div><div class="history-body" id="'+id+'">'+lines+'</div>';
+      pane.appendChild(div);
     });
-  }
-  return { total, done, pct: total > 0 ? Math.round((done/total)*100) : 0 };
+  } catch(e){ pane.innerHTML='<div class="history-loading">Error loading history. Check connection.</div>'; console.error(e); }
 }
-
-function renderTabProgressRow() {
-  const row = document.getElementById('tabProgressRow');
-  row.innerHTML = '';
-  Object.keys(LISTS).forEach(i => {
-    const { done, total, pct } = getTabStats(parseInt(i));
-    const cell = document.createElement('div');
-    cell.className = 'tab-progress-cell';
-    cell.innerHTML = '<div class="tab-prog-label"><span>' + LISTS[i].name + '</span><span class="tab-prog-pct">' + pct + '%</span></div><div class="tab-prog-track"><div class="tab-prog-fill" style="width:' + pct + '%"></div></div>';
-    row.appendChild(cell);
-  });
-}
-
-function numPress(n) {
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += n;
-  updateDots();
-  if (pinBuffer.length === 4) setTimeout(tryLogin, 150);
-}
-function numDel() { pinBuffer = pinBuffer.slice(0,-1); updateDots(); document.getElementById('errorMsg').textContent=''; }
-function updateDots() { for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled', i<pinBuffer.length); }
-function tryLogin() {
-  if (USERS[pinBuffer]) {
-    currentUser = USERS[pinBuffer];
-    showApp();
-  } else {
-    document.getElementById('errorMsg').textContent = 'Incorrect PIN. Try again.';
-    pinBuffer = ''; updateDots();
-  }
-}
-
-function showApp() {
-  document.getElementById('loginScreen').classList.remove('active');
-  document.getElementById('appScreen').classList.add('active');
-  document.getElementById('userLabel').textContent = currentUser;
-  document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-  loadState();
-  renderTabProgressRow();
-  renderChecklist();
-}
-
-function logout() {
-  saveShiftToHistory();
-  currentUser = null; pinBuffer = '';
-  updateDots();
-  document.getElementById('errorMsg').textContent = '';
-  document.getElementById('appScreen').classList.remove('active');
-  document.getElementById('loginScreen').classList.add('active');
-}
-
-function saveShiftToHistory() {
-  const totalDone = countAllDone();
-  if (totalDone === 0) return;
-  history.unshift({ date: new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}), user: currentUser, tabs: JSON.parse(JSON.stringify(state)), totalDone });
-  if (history.length > 30) history.pop();
-  state = {};
-  saveState();
-}
-
-function countAllDone() {
-  let n = 0;
-  for (const tab in state) for (const k in state[tab]) if (state[tab][k].done) n++;
-  return n;
-}
-
-function switchTab(idx) {
-  currentTab = idx;
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
-  if (!showingHistory) renderChecklist();
-}
-
-function showChecklist() {
-  showingHistory = false;
-  document.getElementById('navChecklist').classList.add('active');
-  document.getElementById('navHistory').classList.remove('active');
-  document.getElementById('checklistContent').style.display = '';
-  document.getElementById('progressSummary').style.display = '';
-  document.getElementById('tabProgressRow').style.display = '';
-  document.querySelector('.tabs').style.display = '';
-  document.getElementById('historyPane').style.display = 'none';
-  renderChecklist();
-}
-
-function showHistory() {
-  showingHistory = true;
-  document.getElementById('navHistory').classList.add('active');
-  document.getElementById('navChecklist').classList.remove('active');
-  document.getElementById('checklistContent').style.display = 'none';
-  document.getElementById('progressSummary').style.display = 'none';
-  document.getElementById('tabProgressRow').style.display = 'none';
-  document.querySelector('.tabs').style.display = 'none';
-  const pane = document.getElementById('historyPane');
-  pane.style.display = 'block';
-  renderHistory(pane);
-}
-
 function renderChecklist() {
-  const list = LISTS[currentTab];
-  const tabState = state[currentTab] || (state[currentTab] = {});
-  const content = document.getElementById('checklistContent');
-  content.innerHTML = '';
-  let total = 0, done = 0;
-
-  for (const [section, items] of Object.entries(list.sections)) {
-    const hdr = document.createElement('div');
-    hdr.className = 'section-header';
-    hdr.textContent = section;
-    content.appendChild(hdr);
-
-    items.forEach((item, idx) => {
-      const key = getKey(currentTab, section, idx);
-      const s = tabState[key] || { done: false, comment: '' };
-      tabState[key] = s;
-      total++; if (s.done) done++;
-
-      const row = document.createElement('div');
-      row.className = 'checklist-item' + (s.done ? ' done' : '');
-      row.innerHTML = '<div class="check-box"><svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="item-text">' + item + (s.comment ? '<div class="item-comment">📝 ' + s.comment + '</div>' : '') + '</div><button class="comment-btn" title="Add note">💬</button>';
-
-      row.querySelector('.check-box').addEventListener('click', e => { e.stopPropagation(); s.done = !s.done; saveState(); renderChecklist(); });
-      row.querySelector('.item-text').addEventListener('click', () => { s.done = !s.done; saveState(); renderChecklist(); });
-      row.querySelector('.comment-btn').addEventListener('click', e => {
-        e.stopPropagation();
-        commentTarget = { key, s };
-        document.getElementById('commentInput').value = s.comment || '';
-        document.getElementById('commentModal').classList.add('open');
-      });
-
-      content.appendChild(row);
-    });
-  }
-
-  const pct = total > 0 ? Math.round((done/total)*100) : 0;
-  document.getElementById('progressSummary').innerHTML = '<span class="progress-count">' + done + '/' + total + '</span> items completed &nbsp;·&nbsp; <span style="color:var(--red);font-weight:600">' + pct + '%</span> this tab';
+  const list=LISTS[currentTab]; const tabState=state[currentTab]||(state[currentTab]={}); const content=document.getElementById('checklistContent'); content.innerHTML=''; let total=0,done=0;
+  for(const[section,items]of Object.entries(list.sections)){ const hdr=document.createElement('div'); hdr.className='section-header'; hdr.textContent=section; content.appendChild(hdr); items.forEach((item,idx)=>{ const key=getKey(currentTab,section,idx); const s=tabState[key]||{done:false,comment:''}; tabState[key]=s; total++; if(s.done) done++; const row=document.createElement('div'); row.className='checklist-item'+(s.done?' done':''); row.innerHTML='<div class="check-box"><svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="item-text">'+item+(s.comment?'<div class="item-comment">📝 '+s.comment+'</div>':'')+'</div><button class="comment-btn">💬</button>'; row.querySelector('.check-box').addEventListener('click',e=>{e.stopPropagation();s.done=!s.done;saveLocalState();renderChecklist();}); row.querySelector('.item-text').addEventListener('click',()=>{s.done=!s.done;saveLocalState();renderChecklist();}); row.querySelector('.comment-btn').addEventListener('click',e=>{e.stopPropagation();commentTarget={key,s};document.getElementById('commentInput').value=s.comment||'';document.getElementById('commentModal').classList.add('open');}); content.appendChild(row); }); }
+  const pct=total>0?Math.round((done/total)*100):0;
+  document.getElementById('progressSummary').innerHTML='<span class="progress-count">'+done+'/'+total+'</span> items completed &nbsp;·&nbsp; <span style="color:var(--red);font-weight:600">'+pct+'%</span> this tab';
   renderTabProgressRow();
 }
-
-function closeComment() { document.getElementById('commentModal').classList.remove('open'); commentTarget = null; }
-function saveComment() {
-  if (commentTarget) { commentTarget.s.comment = document.getElementById('commentInput').value.trim(); saveState(); renderChecklist(); }
-  closeComment();
+function renderInfoTab() {
+  const data=INFO[currentInfoTab]; const content=document.getElementById('infoContent'); content.innerHTML='';
+  data.sections.forEach((sec)=>{ const wrap=document.createElement('div'); wrap.className='info-section'; const head=document.createElement('div'); head.className='info-section-header'; head.innerHTML=sec.title+'<span>›</span>'; const body=document.createElement('div'); body.className='info-section-body open'; head.addEventListener('click',()=>body.classList.toggle('open')); if(sec.text){const t=document.createElement('div');t.className='info-text';t.textContent=sec.text;body.appendChild(t);} if(sec.items)sec.items.forEach(item=>{const row=document.createElement('div');row.className='info-row';row.innerHTML='<div class="info-row-label">'+item.label+'</div><div class="info-row-value">'+item.value+'</div>';body.appendChild(row);}); if(sec.allergens)sec.allergens.forEach(a=>{const row=document.createElement('div');row.className='info-row';const tags=a.tags.map(t=>'<span class="allergen-tag'+(a.warn.some(w=>t.includes(w))?' warn':'')+'">'+t+'</span>').join('');row.innerHTML='<div class="info-row-label">'+a.item+'</div><div>'+tags+'</div>';body.appendChild(row);}); wrap.appendChild(head); wrap.appendChild(body); content.appendChild(wrap); });
 }
-
-function renderHistory(pane) {
-  if (!history.length) { pane.innerHTML = '<div style="color:var(--gray-light);font-size:0.85rem;padding:2rem;text-align:center;">No saved sessions yet.<br>History is saved on logout.</div>'; return; }
-  pane.innerHTML = '<div style="font-size:0.62rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gray-light);margin-bottom:1rem;">Recent Sessions</div>';
-  history.forEach((entry, ei) => {
-    const div = document.createElement('div');
-    div.className = 'history-entry';
-    let itemLines = '';
-    for (const tab in entry.tabs) {
-      const listName = LISTS[tab]?.name || tab;
-      itemLines += '<div style="color:var(--red);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;margin-top:0.6rem;margin-bottom:0.2rem">' + listName + '</div>';
-      for (const [section, items] of Object.entries(LISTS[tab]?.sections || {})) {
-        items.forEach((item, idx) => {
-          const key = getKey(tab, section, idx);
-          const s = entry.tabs[tab][key];
-          if (s) {
-            const cls = s.done ? 'history-item-done' : 'history-item-skip';
-            itemLines += '<div class="' + cls + '">' + (s.done ? '✓' : '○') + ' ' + item + (s.comment ? ' <em style="font-size:0.72rem;color:#888">— ' + s.comment + '</em>' : '') + '</div>';
-          }
-        });
-      }
-    }
-    div.innerHTML = '<div class="history-head" onclick="toggleHistory(' + ei + ')"><div><div class="history-date">' + entry.date + '</div><div class="history-meta">by ' + entry.user + '</div></div><span class="history-badge">' + entry.totalDone + ' done</span></div><div class="history-body" id="hb' + ei + '">' + itemLines + '</div>';
-    pane.appendChild(div);
-  });
-}
-
-function toggleHistory(idx) { document.getElementById('hb'+idx).classList.toggle('open'); }
-
-loadState();
+function closeComment(){document.getElementById('commentModal').classList.remove('open');commentTarget=null;}
+function saveComment(){if(commentTarget){commentTarget.s.comment=document.getElementById('commentInput').value.trim();saveLocalState();renderChecklist();}closeComment();}
+loadLocalState();
 </script>
 </body>
 </html>
