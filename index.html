@@ -1,1 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="KPOT">
+<title>KPOT Manager Checklist</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --white: #f5f5f5;
+    --red: #d42b2b;
+    --red-dark: #a01f1f;
+    --gray: #1c1c1c;
+    --gray-mid: #2e2e2e;
+    --gray-light: #555;
+    --border: #2a2a2a;
+  }
 
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--black); color: var(--white); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* LOGIN */
+  #loginScreen { align-items: center; justify-content: center; background: var(--black); padding: 2rem; }
+  .login-box { width: 100%; max-width: 360px; text-align: center; }
+  .brand { font-family: 'Bebas Neue', sans-serif; font-size: 4rem; letter-spacing: 0.12em; color: var(--white); line-height: 1; }
+  .brand span { color: var(--red); }
+  .brand-sub { font-size: 0.7rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gray-light); margin-top: 0.3rem; margin-bottom: 2.5rem; }
+  .login-label { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray-light); margin-bottom: 1rem; display: block; }
+  .pin-dots { display: flex; justify-content: center; gap: 0.8rem; margin-bottom: 1.8rem; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--gray-mid); background: transparent; transition: all 0.2s; }
+  .pin-dot.filled { background: var(--red); border-color: var(--red); }
+  .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-bottom: 1rem; }
+  .num-btn { background: var(--gray); border: 1px solid var(--border); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 1.3rem; font-weight: 500; padding: 1.1rem; border-radius: 8px; cursor: pointer; transition: background 0.15s, transform 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; }
+  .num-btn:hover { background: var(--gray-mid); }
+  .num-btn:active { transform: scale(0.95); background: var(--red-dark); }
+  .num-btn.del { font-size: 1rem; color: var(--gray-light); }
+  .num-btn.empty { background: transparent; border: none; cursor: default; }
+  .error-msg { color: var(--red); font-size: 0.78rem; letter-spacing: 0.1em; height: 1.2rem; margin-top: 0.5rem; transition: opacity 0.3s; }
+
+  /* TOPBAR */
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.2rem 0.8rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--black); z-index: 10; }
+  .topbar-brand { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.1em; }
+  .topbar-meta { text-align: right; font-size: 0.68rem; color: var(--gray-light); letter-spacing: 0.06em; }
+  .topbar-meta strong { display: block; color: var(--white); font-size: 0.75rem; font-weight: 500; }
+  .logout-btn { background: none; border: 1px solid var(--border); color: var(--gray-light); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.3rem 0.7rem; border-radius: 4px; cursor: pointer; margin-left: 0.8rem; transition: color 0.2s, border-color 0.2s; }
+  .logout-btn:hover { color: var(--red); border-color: var(--red); }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn { flex-shrink: 0; background: none; border: none; border-bottom: 2px solid transparent; color: var(--gray-light); font-family: 'DM Sans', sans-serif; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.6rem 1rem 0.4rem; cursor: pointer; transition: color 0.2s, border-color 0.2s; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+  .tab-btn.active { color: var(--white); border-bottom-color: var(--red); }
+  .tab-btn:hover { color: var(--white); }
+
+  /* TAB PROGRESS BARS */
+  .tab-progress-row { display: flex; border-bottom: 1px solid var(--border); background: var(--black); }
+  .tab-progress-cell { flex: 1; padding: 0.35rem 0.5rem 0.45rem; border-right: 1px solid var(--border); min-width: 0; }
+  .tab-progress-cell:last-child { border-right: none; }
+  .tab-prog-label { font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.25rem; display: flex; justify-content: space-between; }
+  .tab-prog-pct { color: var(--red); font-weight: 600; }
+  .tab-prog-track { height: 3px; background: var(--gray-mid); border-radius: 2px; overflow: hidden; }
+  .tab-prog-fill { height: 100%; background: var(--red); border-radius: 2px; transition: width 0.4s ease; }
+
+  /* CHECKLIST */
+  .checklist-content { padding: 1.2rem; flex: 1; overflow-y: auto; }
+  .section-header { font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gray-light); margin: 1.4rem 0 0.6rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+  .section-header:first-child { margin-top: 0; }
+  .checklist-item { display: flex; align-items: flex-start; gap: 0.9rem; padding: 0.75rem 0.4rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; border-radius: 4px; -webkit-tap-highlight-color: transparent; }
+  .checklist-item:hover { background: var(--gray); }
+  .check-box { width: 20px; height: 20px; border: 2px solid var(--gray-mid); border-radius: 4px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .checklist-item.done .check-box { background: var(--red); border-color: var(--red); }
+  .check-box svg { display: none; }
+  .checklist-item.done .check-box svg { display: block; }
+  .item-text { flex: 1; font-size: 0.88rem; font-weight: 400; line-height: 1.4; color: var(--white); transition: color 0.2s; }
+  .checklist-item.done .item-text { color: var(--gray-light); text-decoration: line-through; }
+  .item-comment { font-size: 0.72rem; color: var(--gray-light); margin-top: 0.2rem; }
+  .comment-btn { background: none; border: none; color: var(--gray-light); cursor: pointer; padding: 2px 4px; font-size: 0.9rem; border-radius: 4px; transition: color 0.2s; }
+  .comment-btn:hover { color: var(--red); }
+
+  /* PROGRESS SUMMARY */
+  .progress-summary { display: flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1.2rem; border-top: 1px solid var(--border); background: var(--gray); font-size: 0.75rem; color: var(--gray-light); }
+  .progress-count { color: var(--white); font-weight: 600; }
+
+  /* COMMENT MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: flex-end; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--gray); border-radius: 16px 16px 0 0; padding: 1.5rem; width: 100%; max-width: 480px; border-top: 2px solid var(--red); }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.08em; margin-bottom: 0.8rem; }
+  .modal textarea { width: 100%; background: var(--black); border: 1px solid var(--border); border-radius: 8px; color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 0.75rem 1rem; resize: none; height: 100px; outline: none; }
+  .modal textarea:focus { border-color: var(--red); }
+  .modal-btns { display: flex; gap: 0.6rem; margin-top: 0.8rem; }
+  .btn-save { flex: 1; background: var(--red); border: none; color: var(--white); font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.85rem; padding: 0.75rem; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+  .btn-save:hover { background: var(--red-dark); }
+  .btn-cancel { background: var(--gray-mid); border: 1px solid var(--border); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.75rem 1.2rem; border-radius: 8px; cursor: pointer; }
+
+  /* HISTORY */
+  .history-entry { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.8rem; overflow: hidden; }
+  .history-head { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 1rem; background: var(--gray); cursor: pointer; }
+  .history-date { font-size: 0.8rem; font-weight: 600; color: var(--white); }
+  .history-meta { font-size: 0.7rem; color: var(--gray-light); margin-top: 0.1rem; }
+  .history-badge { font-size: 0.68rem; background: var(--red); color: var(--white); padding: 0.2rem 0.6rem; border-radius: 20px; font-weight: 600; }
+  .history-body { padding: 0.8rem 1rem; display: none; font-size: 0.82rem; color: var(--gray-light); line-height: 1.7; }
+  .history-body.open { display: block; }
+  .history-item-done { color: var(--white); }
+  .history-item-skip { color: var(--gray-light); text-decoration: line-through; }
+
+  nav.bottom-nav { display: flex; border-top: 1px solid var(--border); background: var(--black); position: sticky; bottom: 0; padding-bottom: env(safe-area-inset-bottom); }
+  .nav-btn { flex: 1; background: none; border: none; color: var(--gray-light); font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.8rem 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; transition: color 0.2s; -webkit-tap-highlight-color: transparent; }
+  .nav-btn svg { width: 20px; height: 20px; }
+  .nav-btn.active { color: var(--red); }
+  .nav-btn:hover { color: var(--white); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="screen active">
+  <div class="login-box">
+    <div class="brand">KP<span>O</span>T</div>
+    <div class="brand-sub">Manager Checklist System</div>
+    <span class="login-label">Enter Your PIN</span>
+    <div class="pin-dots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="numpad">
+      <button class="num-btn" onclick="numPress('1')">1</button>
+      <button class="num-btn" onclick="numPress('2')">2</button>
+      <button class="num-btn" onclick="numPress('3')">3</button>
+      <button class="num-btn" onclick="numPress('4')">4</button>
+      <button class="num-btn" onclick="numPress('5')">5</button>
+      <button class="num-btn" onclick="numPress('6')">6</button>
+      <button class="num-btn" onclick="numPress('7')">7</button>
+      <button class="num-btn" onclick="numPress('8')">8</button>
+      <button class="num-btn" onclick="numPress('9')">9</button>
+      <button class="num-btn empty"></button>
+      <button class="num-btn" onclick="numPress('0')">0</button>
+      <button class="num-btn del" onclick="numDel()">⌫</button>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-brand">KP<span style="color:var(--red)">O</span>T</div>
+    <div style="display:flex;align-items:center;gap:0.4rem">
+      <div class="topbar-meta">
+        <strong id="userLabel">Manager</strong>
+        <span id="dateLabel"></span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Out</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(0)">Opening</button>
+    <button class="tab-btn" onclick="switchTab(1)">Closing</button>
+    <button class="tab-btn" onclick="switchTab(2)">Food Safety</button>
+    <button class="tab-btn" onclick="switchTab(3)">Shift Handover</button>
+  </div>
+
+  <div class="tab-progress-row" id="tabProgressRow"></div>
+
+  <div class="checklist-content" id="checklistContent"></div>
+  <div class="progress-summary" id="progressSummary"></div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="navChecklist" onclick="showChecklist()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Checklist
+    </button>
+    <button class="nav-btn" id="navHistory" onclick="showHistory()">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      History
+    </button>
+  </nav>
+</div>
+
+<div id="historyPane" style="display:none; flex:1; overflow-y:auto; padding:1.2rem;"></div>
+
+<!-- COMMENT MODAL -->
+<div class="modal-overlay" id="commentModal">
+  <div class="modal">
+    <div class="modal-title">Add Note</div>
+    <textarea id="commentInput" placeholder="Write a note for this item..."></textarea>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeComment()">Cancel</button>
+      <button class="btn-save" onclick="saveComment()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const USERS = { '1234': 'Manager', '5678': 'Staff', '0000': 'Admin' };
+
+const LISTS = {
+  0: {
+    name: 'Opening',
+    sections: {
+      'Front of House': ['Unlock main entrance & check exterior','Turn on dining room lights & music','Set up host stand & menus','Inspect all tables — clean, set, ready','Confirm reservation list for the day'],
+      'Kitchen': ['Verify all equipment is operational','Check refrigerator & freezer temperatures','Confirm prep inventory is stocked','Inspect walk-in cooler for proper storage','Ensure hand-washing stations are supplied'],
+      'Staff': ['Confirm all staff have clocked in','Conduct pre-shift meeting','Assign station assignments','Review daily specials with team'],
+    }
+  },
+  1: {
+    name: 'Closing',
+    sections: {
+      'Front of House': ['Clear & sanitize all tables','Sweep and mop dining room floor','Restock condiments & napkins for next day','Secure cash register & count drawer','Turn off lights, music, and displays'],
+      'Kitchen': ['Deep clean all cooking surfaces','Store all food properly — labeled & dated','Empty and clean all fryers/grills','Check dumpster area is secure','Turn off all equipment & verify'],
+      'Closing Duties': ['Complete closing sales report','Lock all entry points','Activate alarm system','Submit end-of-day notes to GM'],
+    }
+  },
+  2: {
+    name: 'Food Safety',
+    sections: {
+      'Temperature Checks': ['Walk-in cooler (target: 34–38°F)','Freezer (target: 0°F or below)','Hot holding units (target: 140°F+)','Cold buffet station (target: 40°F or below)'],
+      'Hygiene': ['All staff wearing gloves when handling food','Handwashing log signed by all staff','No bare-hand contact with ready-to-eat foods','Hair nets/restraints in use in kitchen'],
+      'Food Storage': ['FIFO rotation verified — older product in front','No expired product on shelves','Raw meats stored below cooked/ready foods','All containers sealed and labeled'],
+    }
+  },
+  3: {
+    name: 'Shift Handover',
+    sections: {
+      'Outgoing Manager': ['Complete sales summary for shift','Note any maintenance issues observed','Log any staff incidents or concerns','Count and verify cash drawer','Brief incoming manager on priority items'],
+      'Incoming Manager': ['Review outgoing manager notes','Confirm staffing for remainder of shift','Walk the floor — assess readiness','Check kitchen inventory levels','Review any reservations or events'],
+    }
+  }
+};
+
+let currentUser = null, pinBuffer = '', currentTab = 0;
+let state = {}, history = [], commentTarget = null, showingHistory = false;
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('kpot_state');
+    const h = localStorage.getItem('kpot_history');
+    if (s) state = JSON.parse(s);
+    if (h) history = JSON.parse(h);
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('kpot_state', JSON.stringify(state));
+    localStorage.setItem('kpot_history', JSON.stringify(history));
+  } catch(e) {}
+}
+
+function getKey(tab, section, idx) { return tab + '__' + section + '__' + idx; }
+
+function getTabStats(tabIdx) {
+  const list = LISTS[tabIdx];
+  const tabState = state[tabIdx] || {};
+  let total = 0, done = 0;
+  for (const [section, items] of Object.entries(list.sections)) {
+    items.forEach((_, idx) => {
+      total++;
+      if (tabState[getKey(tabIdx, section, idx)]?.done) done++;
+    });
+  }
+  return { total, done, pct: total > 0 ? Math.round((done/total)*100) : 0 };
+}
+
+function renderTabProgressRow() {
+  const row = document.getElementById('tabProgressRow');
+  row.innerHTML = '';
+  Object.keys(LISTS).forEach(i => {
+    const { done, total, pct } = getTabStats(parseInt(i));
+    const cell = document.createElement('div');
+    cell.className = 'tab-progress-cell';
+    cell.innerHTML = '<div class="tab-prog-label"><span>' + LISTS[i].name + '</span><span class="tab-prog-pct">' + pct + '%</span></div><div class="tab-prog-track"><div class="tab-prog-fill" style="width:' + pct + '%"></div></div>';
+    row.appendChild(cell);
+  });
+}
+
+function numPress(n) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += n;
+  updateDots();
+  if (pinBuffer.length === 4) setTimeout(tryLogin, 150);
+}
+function numDel() { pinBuffer = pinBuffer.slice(0,-1); updateDots(); document.getElementById('errorMsg').textContent=''; }
+function updateDots() { for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled', i<pinBuffer.length); }
+function tryLogin() {
+  if (USERS[pinBuffer]) {
+    currentUser = USERS[pinBuffer];
+    showApp();
+  } else {
+    document.getElementById('errorMsg').textContent = 'Incorrect PIN. Try again.';
+    pinBuffer = ''; updateDots();
+  }
+}
+
+function showApp() {
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  document.getElementById('userLabel').textContent = currentUser;
+  document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  loadState();
+  renderTabProgressRow();
+  renderChecklist();
+}
+
+function logout() {
+  saveShiftToHistory();
+  currentUser = null; pinBuffer = '';
+  updateDots();
+  document.getElementById('errorMsg').textContent = '';
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('loginScreen').classList.add('active');
+}
+
+function saveShiftToHistory() {
+  const totalDone = countAllDone();
+  if (totalDone === 0) return;
+  history.unshift({ date: new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}), user: currentUser, tabs: JSON.parse(JSON.stringify(state)), totalDone });
+  if (history.length > 30) history.pop();
+  state = {};
+  saveState();
+}
+
+function countAllDone() {
+  let n = 0;
+  for (const tab in state) for (const k in state[tab]) if (state[tab][k].done) n++;
+  return n;
+}
+
+function switchTab(idx) {
+  currentTab = idx;
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+  if (!showingHistory) renderChecklist();
+}
+
+function showChecklist() {
+  showingHistory = false;
+  document.getElementById('navChecklist').classList.add('active');
+  document.getElementById('navHistory').classList.remove('active');
+  document.getElementById('checklistContent').style.display = '';
+  document.getElementById('progressSummary').style.display = '';
+  document.getElementById('tabProgressRow').style.display = '';
+  document.querySelector('.tabs').style.display = '';
+  document.getElementById('historyPane').style.display = 'none';
+  renderChecklist();
+}
+
+function showHistory() {
+  showingHistory = true;
+  document.getElementById('navHistory').classList.add('active');
+  document.getElementById('navChecklist').classList.remove('active');
+  document.getElementById('checklistContent').style.display = 'none';
+  document.getElementById('progressSummary').style.display = 'none';
+  document.getElementById('tabProgressRow').style.display = 'none';
+  document.querySelector('.tabs').style.display = 'none';
+  const pane = document.getElementById('historyPane');
+  pane.style.display = 'block';
+  renderHistory(pane);
+}
+
+function renderChecklist() {
+  const list = LISTS[currentTab];
+  const tabState = state[currentTab] || (state[currentTab] = {});
+  const content = document.getElementById('checklistContent');
+  content.innerHTML = '';
+  let total = 0, done = 0;
+
+  for (const [section, items] of Object.entries(list.sections)) {
+    const hdr = document.createElement('div');
+    hdr.className = 'section-header';
+    hdr.textContent = section;
+    content.appendChild(hdr);
+
+    items.forEach((item, idx) => {
+      const key = getKey(currentTab, section, idx);
+      const s = tabState[key] || { done: false, comment: '' };
+      tabState[key] = s;
+      total++; if (s.done) done++;
+
+      const row = document.createElement('div');
+      row.className = 'checklist-item' + (s.done ? ' done' : '');
+      row.innerHTML = '<div class="check-box"><svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="item-text">' + item + (s.comment ? '<div class="item-comment">📝 ' + s.comment + '</div>' : '') + '</div><button class="comment-btn" title="Add note">💬</button>';
+
+      row.querySelector('.check-box').addEventListener('click', e => { e.stopPropagation(); s.done = !s.done; saveState(); renderChecklist(); });
+      row.querySelector('.item-text').addEventListener('click', () => { s.done = !s.done; saveState(); renderChecklist(); });
+      row.querySelector('.comment-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        commentTarget = { key, s };
+        document.getElementById('commentInput').value = s.comment || '';
+        document.getElementById('commentModal').classList.add('open');
+      });
+
+      content.appendChild(row);
+    });
+  }
+
+  const pct = total > 0 ? Math.round((done/total)*100) : 0;
+  document.getElementById('progressSummary').innerHTML = '<span class="progress-count">' + done + '/' + total + '</span> items completed &nbsp;·&nbsp; <span style="color:var(--red);font-weight:600">' + pct + '%</span> this tab';
+  renderTabProgressRow();
+}
+
+function closeComment() { document.getElementById('commentModal').classList.remove('open'); commentTarget = null; }
+function saveComment() {
+  if (commentTarget) { commentTarget.s.comment = document.getElementById('commentInput').value.trim(); saveState(); renderChecklist(); }
+  closeComment();
+}
+
+function renderHistory(pane) {
+  if (!history.length) { pane.innerHTML = '<div style="color:var(--gray-light);font-size:0.85rem;padding:2rem;text-align:center;">No saved sessions yet.<br>History is saved on logout.</div>'; return; }
+  pane.innerHTML = '<div style="font-size:0.62rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gray-light);margin-bottom:1rem;">Recent Sessions</div>';
+  history.forEach((entry, ei) => {
+    const div = document.createElement('div');
+    div.className = 'history-entry';
+    let itemLines = '';
+    for (const tab in entry.tabs) {
+      const listName = LISTS[tab]?.name || tab;
+      itemLines += '<div style="color:var(--red);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;margin-top:0.6rem;margin-bottom:0.2rem">' + listName + '</div>';
+      for (const [section, items] of Object.entries(LISTS[tab]?.sections || {})) {
+        items.forEach((item, idx) => {
+          const key = getKey(tab, section, idx);
+          const s = entry.tabs[tab][key];
+          if (s) {
+            const cls = s.done ? 'history-item-done' : 'history-item-skip';
+            itemLines += '<div class="' + cls + '">' + (s.done ? '✓' : '○') + ' ' + item + (s.comment ? ' <em style="font-size:0.72rem;color:#888">— ' + s.comment + '</em>' : '') + '</div>';
+          }
+        });
+      }
+    }
+    div.innerHTML = '<div class="history-head" onclick="toggleHistory(' + ei + ')"><div><div class="history-date">' + entry.date + '</div><div class="history-meta">by ' + entry.user + '</div></div><span class="history-badge">' + entry.totalDone + ' done</span></div><div class="history-body" id="hb' + ei + '">' + itemLines + '</div>';
+    pane.appendChild(div);
+  });
+}
+
+function toggleHistory(idx) { document.getElementById('hb'+idx).classList.toggle('open'); }
+
+loadState();
+</script>
+</body>
+</html>
